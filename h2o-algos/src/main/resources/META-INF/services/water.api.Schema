@@ -30,8 +30,8 @@ hex.schemas.GBMV3$GBMParametersV3
 hex.schemas.GLMModelV3
 hex.schemas.GLMModelV3$GLMModelOutputV3
 hex.schemas.GLMRegularizationPathV3
-hex.schemas.GLMV3
-hex.schemas.GLMV3$GLMParametersV3
+hex.schemas.HGLMV3
+hex.schemas.HGLMV3$GLMParametersV3
 hex.schemas.GLRMModelV3
 hex.schemas.GLRMModelV3$GLRMModelOutputV3
 hex.schemas.GLRMV3
@@ -118,3 +118,7 @@ hex.schemas.AdaBoostModelV3
 hex.schemas.AdaBoostModelV3$AdaBoostModelOutputV3
 hex.schemas.AdaBoostV3
 hex.schemas.AdaBoostV3$AdaBoostParametersV3
+hex.schemas.HGLMModelV3
+hex.schemas.HGLMModelV3$HGLMModelOutputV3
+hex.schemas.HGLMV3
+hex.schemas.HGLMV3$HGLMParametersV3

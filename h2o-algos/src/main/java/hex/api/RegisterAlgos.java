@@ -18,6 +18,7 @@ public class RegisterAlgos extends AlgoAbstractRegister {
             new hex.deeplearning.DeepLearning(true),
             new hex.glm         .GLM         (true),
             new hex.glrm        .GLRM        (true),
+            new hex.hglm        .HGLM        (true),
             new hex.kmeans      .KMeans      (true),
             new hex.naivebayes  .NaiveBayes  (true),
             new hex.pca         .PCA         (true),

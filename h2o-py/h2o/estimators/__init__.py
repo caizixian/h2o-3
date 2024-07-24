@@ -37,6 +37,7 @@ from .targetencoder import H2OTargetEncoderEstimator
 from .uplift_random_forest import H2OUpliftRandomForestEstimator
 from .word2vec import H2OWord2vecEstimator
 from .xgboost import H2OXGBoostEstimator
+from .hglm import H2OHGLMEstimator
 
 
 module = sys.modules[__name__]
@@ -69,5 +70,5 @@ __all__ = (
     "H2ONaiveBayesEstimator", "H2OPrincipalComponentAnalysisEstimator", "H2OSupportVectorMachineEstimator",
     "H2ORandomForestEstimator", "H2ORuleFitEstimator", "H2OStackedEnsembleEstimator",
     "H2OSingularValueDecompositionEstimator", "H2OTargetEncoderEstimator", "H2OUpliftRandomForestEstimator",
-    "H2OWord2vecEstimator", "H2OXGBoostEstimator"
+    "H2OWord2vecEstimator", "H2OXGBoostEstimator", "H2OHGLMEstimator"
 )
