@@ -1360,7 +1360,6 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
     public final double devianceValid;
     public final int    [] idxs;
     public final double [] beta;
-    public double _trainTheta;
     public double[] zValues;
     public boolean dispersionEstimated;
 
@@ -1509,9 +1508,6 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
     
     public DataInfo getDinfo() { return _dinfo; }
     public int bestSubmodelIndex() { return _selected_submodel_idx; }
-    public double lambda_selected(){
-      return _submodels[_selected_submodel_idx].lambda_value;
-    }
     final int _totalBetaLength;
     double[] _global_beta;
     private double[] _zvalues;

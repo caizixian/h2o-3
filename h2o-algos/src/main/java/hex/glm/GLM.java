@@ -21,9 +21,6 @@ import hex.optimization.L_BFGS;
 import hex.optimization.L_BFGS.ProgressMonitor;
 import hex.optimization.L_BFGS.Result;
 import hex.optimization.OptimizationUtils.*;
-import hex.svd.SVD;
-import hex.svd.SVDModel;
-import hex.svd.SVDModel.SVDParameters;
 import hex.util.CheckpointUtils;
 import jsr166y.CountedCompleter;
 import org.joda.time.format.DateTimeFormat;
@@ -606,13 +603,6 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
         _lambdaDevTest.add(devValid/nobsValid);
     }
 
-    public synchronized void addIterationScore(int iter, double[] sumEtaInfo) {
-      if (_scoringIters.size() > 0 && _scoringIters.get(_scoringIters.size() - 1) >= iter)
-        return; // do not record twice, happens for the last iteration, need to record scoring history in checkKKTs because of gaussian fam.
-      _scoringIters.add(iter);
-      _scoringTimes.add(System.currentTimeMillis());
-    }
-
     public synchronized TwoDimTable to2dTable(GLMParameters parms, double[] xvalDev, double[] xvalSE) {
       String[] cnames = new String[]{"timestamp", "duration", "iterations", "negative_log_likelihood", "objective"};
       String[] ctypes = new String[]{"string", "string", "int", "double", "double"};
@@ -656,19 +646,6 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
       return res;
     }
     
-    public synchronized TwoDimTable to2dTableHGLM() {
-      String[] cnames = new String[]{"timestamp", "duration", "iterations", "sum(etai-eta0)^2", "convergence"};
-      String[] ctypes = new String[]{"string", "string", "int", "double", "double"};
-      String[] cformats = new String[]{"%s", "%s", "%d", "%.5f", "%.5f"};
-      TwoDimTable res = new TwoDimTable("Scoring History", "", new String[_scoringIters.size()], cnames, ctypes, cformats, "");
-      for (int i = 0; i < _scoringIters.size(); ++i) {
-        int col = 0;
-        res.set(i, col++, DATE_TIME_FORMATTER.print(_scoringTimes.get(i)));
-        res.set(i, col++, PrettyPrint.msecs(_scoringTimes.get(i) - _scoringTimes.get(0), true));
-        res.set(i, col++, _scoringIters.get(i));
-      }
-      return res;
-    }
 
     void restoreFromCheckpoint(TwoDimTable sHist, int[] colIndices) {
       int numRows = sHist.getRowDim();
@@ -1631,65 +1608,6 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
       if (_parms._lambda_search) {
         _state.updateState(beta, _state.gslvr().getGradient(beta));  // only calculate _gradient here when needed
       }
-    }
-
-    public Frame makeZeroOrOneFrame(long rowNumber, int colNumber, int val, String[] columnNames) {
-      Vec tempVec = val == 0 ? Vec.makeZero(rowNumber) : Vec.makeOne(rowNumber);
-      Frame madeFrame = val == 0 ? new Frame(tempVec.makeZeros(colNumber)) : new Frame(tempVec.makeOnes(colNumber));
-      if (columnNames != null) {
-        if (columnNames.length == colNumber)
-          madeFrame.setNames(columnNames);
-        else
-          throw new IllegalArgumentException("Column names length and number of columns in Frame differ.");
-      }
-      cleanupHGLMMemory(null, null, new Vec[]{tempVec}, null);
-      return madeFrame;
-    }
-
-    public void copyOver(double[][] cholR, double[][] cholRcopy) {
-      int dim1 = cholR.length;
-      int dim2 = cholR[0].length;
-      for (int index = 0; index < dim1; index++)
-        System.arraycopy(cholR[index], 0, cholRcopy[index], 0, dim2);
-    }
-
-
-    /***
-     * Method to clean up memories like Frames, DataInfos and Vectors after usage.
-     *
-     * @param tempdInfo
-     * @param tempFrames
-     * @param tempVectors
-     */
-    private void cleanupHGLMMemory(DataInfo[] tempdInfo, Frame[] tempFrames, Vec[] tempVectors, Key[] dkvKeys) {
-      if (tempdInfo != null) {
-        for (int index = 0; index < tempdInfo.length; index++)
-          if (tempdInfo[index] != null)
-            tempdInfo[index].remove();
-      }
-      if (tempFrames != null) {
-        for (int index = 0; index < tempFrames.length; index++)
-          if (tempFrames[index] != null)
-            tempFrames[index].delete();
-      }
-      if (tempVectors != null) {
-        for (int index = 0; index < tempVectors.length; index++)
-          if (tempVectors[index] != null)
-            tempVectors[index].remove();
-      }
-      if (dkvKeys != null) {
-        for (int index = 0; index < dkvKeys.length; index++) {
-          if (dkvKeys[index] != null)
-            DKV.remove(dkvKeys[index]);
-        }
-      }
-    }
-    
-
-    private void assignEstStdErr(GLMModel glm, double[] VC) {
-      double[] stdErr = glm._output.stdErr();
-      VC[0] = glm.coefficients().get("Intercept");
-      VC[1] = stdErr[0];
     }
     
 
@@ -2970,26 +2888,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
     private long timeSinceLastScoring() {
       return System.currentTimeMillis() - _lastScore;
     }
-
-    private double calcLogDeterminant(Frame frame) {  // calculate the log determinant for frame/(2*Math.PI)
-      SVDModel.SVDParameters parms = new SVDModel.SVDParameters();
-      parms._train = frame._key;
-      parms._transform = DataInfo.TransformType.NONE;
-      parms._svd_method = SVDParameters.Method.GramSVD;
-      parms._save_v_frame = false;
-      parms._nv = frame.numCols();
-      SVDModel model = new SVD(parms).trainModel().get();
-      double[] singular_values = model._output._d;
-      double cond = ArrayUtils.minValue(singular_values) / ArrayUtils.maxValue(singular_values);
-      if (cond < 0.00000001)  // value copied from R
-        warn("pbvh", "The Hessian used for computing pbvh is ill-conditioned.");
-      double sumLog = 0.0;
-      double log2Pi = Math.log(2 * Math.PI);
-      for (int index = 0; index < parms._nv; index++)
-        sumLog += Math.log(singular_values[index]) - log2Pi;
-      model.delete(); // clean up model before proceeding.
-      return sumLog;
-    }
+    
 
     private void scoreAndUpdateModel() {
       // compute full validation on train and test
@@ -3113,7 +3012,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
         else
           _model.addSubmodel(i, sm = new Submodel(lambda, _state.alpha(), getNullBeta(), _state._iter, nullDevTrain,
                   nullDevValid, _betaInfo.totalBetaLength(), null, false));
-      } else {  // this is also the path for HGLM model
+      } else {
         if (continueFromPreviousSubmodel) {
           sm = _model._output._submodels[i];
         } else {
