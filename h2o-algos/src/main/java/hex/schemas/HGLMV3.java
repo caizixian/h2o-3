@@ -29,23 +29,23 @@ public class HGLMV3 extends ModelBuilderSchema<HGLM, HGLMV3, HGLMV3.HGLMParamete
             "offset_column",
             "weights_column",
             "family",
-            "rand_family", // distribution of random component, array
+            "random_family", // distribution of random component, array
             "method",
             "standardize",
             "missing_values_handling",
             "plug_values",
-            "compute_p_values",
             "remove_collinear_columns",
             "max_iterations",
             "objective_epsilon",
             "beta_epsilon",
-            "gradient_epsilon",
             "startval",  // initial starting values for fixed and randomized coefficients, double array
             "calc_like",
             "obj_reg",
             "max_runtime_secs",
             "custom_metric_func",
             "generate_scoring_history",
+            "random_intercept", 
+            "group_column"
     };
 
     @API(help = "Seed for pseudo random number generator (if applicable).", gridable = true)
@@ -60,19 +60,13 @@ public class HGLMV3 extends ModelBuilderSchema<HGLM, HGLMV3, HGLMV3.HGLMParamete
     @API(help = "Random Component Family array.  One for each random component. Only support gaussian for now.",
             values ={"[gaussian]"},
             level = Level.critical, gridable=true)
-    public GLMParameters.Family[] rand_family;
+    public GLMParameters.Family[] random_family;
 
     @API(help = "AUTO will set the solver based on given data and the other parameters. IRLSM is fast on on problems" +
             " with small number of predictors and for lambda-search with L1 penalty, L_BFGS scales better for datasets" +
             " with many columns.", values = {"AUTO", "IRLSM", "L_BFGS","COORDINATE_DESCENT_NAIVE", 
             "COORDINATE_DESCENT", "GRADIENT_DESCENT_LH", "GRADIENT_DESCENT_SQERR"}, level = Level.critical)
     public Solver method;
-
-    @API(help = "Number of lambdas to be used in a search." +
-    " Default indicates: If alpha is zero, with lambda search" +
-    " set to True, the value of nlamdas is set to 30 (fewer lambdas" +
-    " are needed for ridge regression) otherwise it is set to 100.", level = Level.critical)
-    public int nlambdas;
     
     @API(help = "Perform scoring for every score_iteration_interval iterations.", level = Level.secondary)
     public int score_iteration_interval;
@@ -130,6 +124,11 @@ public class HGLMV3 extends ModelBuilderSchema<HGLM, HGLMV3, HGLMV3.HGLMParamete
             level = Level.secondary, direction = Direction.INPUT)
     public boolean generate_scoring_history;  // if enabled, will generate scoring history for iterations specified in
                                               // scoring_iteration_interval and score_every_iteration
+    @API(help="if true, will allow random component to the GLM coefficients.", direction=Direction.INPUT, gridable=true)
+    public boolean random_intercept;
+    
+    @API(help="group_column is the column that is categorical and used to generate the groups in HGLM")
+    public String group_column;
     /////////////////////
   }
 }
