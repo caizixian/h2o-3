@@ -67,8 +67,6 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
   public static final int SCORING_INTERVAL_MSEC = 15000; // scoreAndUpdateModel every minute unless score every iteration is set
   public String _generatedWeights = null;
-  public String[] _randCoeffNames = null;
-  public String[] _randomColNames = null;
   public double[][][] _penaltyMatrix = null;
   public String[][] _gamColnames = null;
   public int[][] _gamColIndices = null; // corresponding column indices in dataInfo

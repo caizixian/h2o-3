@@ -48,6 +48,8 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     public long progressUnits() {
       return 1;
     }
+
+    public static enum Method {"EM"}; // EM: expectation maximization
   }
   
   public static class HGLMModelOutput extends Model.Output {

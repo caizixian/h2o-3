@@ -68,7 +68,11 @@ public class GAM extends ModelBuilder<GAMModel, GAMModel.GAMParameters, GAMModel
   
   @Override
   public ModelCategory[] can_build() {
-    return new ModelCategory[]{ModelCategory.Regression};
+    return new ModelCategory[]{            
+            ModelCategory.Regression,
+            ModelCategory.Binomial,
+            ModelCategory.Multinomial,
+            ModelCategory.Ordinal};
   }
 
   @Override
