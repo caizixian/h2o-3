@@ -128,6 +128,7 @@ water.rapids.ast.prims.advmath.AstHist
 water.rapids.ast.prims.mungers.AstColPySlice
 water.rapids.ast.prims.operators.AstMul
 water.rapids.ast.prims.mungers.AstNaOmit
+water.rapids.ast.prims.mungers.AstNaReplaceMeanMode
 water.rapids.ast.prims.advmath.AstTable
 water.rapids.ast.prims.math.AstCosh
 water.rapids.ast.prims.operators.AstGe

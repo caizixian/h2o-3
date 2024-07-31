@@ -6,6 +6,7 @@ import water.H2O;
 import water.Key;
 import water.exceptions.H2OModelBuilderIllegalArgumentException;
 import water.fvec.Frame;
+import water.fvec.Vec;
 
 import java.util.Arrays;
 import java.util.List;
@@ -76,29 +77,52 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
     if (expensive) {
       if (_parms._max_iterations == 0)
         error("_max_iterations", H2O.technote(2, "if specified, must be >= 1."));
-      
+
+      Frame trainFrame = train();
+      List<String> columnNames = Arrays.stream(trainFrame.names()).collect(Collectors.toList());
       if (_parms._group_column == null) {
         error("group_column", " column used to generate level 2 units is missing");
       } else {
-        Frame trainFrame = train();
-        List<String> columnNames = Arrays.stream(trainFrame.names()).collect(Collectors.toList());
         if (!columnNames.contains(_parms._group_column))
           error("group_column", " is not found in the training frame.");
-        
-        if (trainFrame.vec())
+        else if (!trainFrame.vec(_parms._group_column).isCategorical())
+          error("group_column", " should be a categorical column.");
       }
       
+      if (_parms._random_columns == null) {
+        error("random_columns", " must contain columns with random effect and cannot be empty.");
+      } else {
+        boolean goodRandomColumns = (Arrays.stream(_parms._random_columns).filter(x -> columnNames.contains(x)).count()
+                == _parms._random_columns.length);
+        if (!goodRandomColumns)
+          error("random_columns", " can only contain columns in the training frame.");
+      }
     }
   }
 
   private class HGLMDriver extends Driver {
+    
+    // this method will first sort the training frame according to the group_column.  Before sorting happens, any
+    // NA's in the training frame will be imputed with the mode.
+    Frame adaptTrain() {
+      Frame trainingFrame = train();
+      Vec groupVec = trainingFrame.vec(_parms._group_column).makeCopy();
+      if (groupVec.naCnt() > 0)
+        replaceNAwithMode(groupVec);
+    }
+    
+    public void replaceNAwithMode(Vec groupVec) {
+      
+    }
 
     @Override
     public void computeImpl() {
       init(true);
       if (error_count()>0)
         throw H2OModelBuilderIllegalArgumentException.makeFromBuilder(HGLM.this);
-      
+      // generate the new training frame which contains the predictors with fixed coefficients, sorted according to
+      // the grouping dictated by the group_column
+      Frame newTFrame = new Frame(rebalance(adaptTrain(), false, Key.make()".temprory.train"));
     }
   }
   

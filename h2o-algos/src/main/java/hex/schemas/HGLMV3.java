@@ -7,7 +7,6 @@ import hex.hglm.HGLMModel;
 import water.api.API;
 import water.api.API.Direction;
 import water.api.API.Level;
-import water.api.schemas3.KeyV3.FrameKeyV3;
 import water.api.schemas3.ModelParametersSchemaV3;
 
 public class HGLMV3 extends ModelBuilderSchema<HGLM, HGLMV3, HGLMV3.HGLMParametersV3> {
@@ -32,8 +31,6 @@ public class HGLMV3 extends ModelBuilderSchema<HGLM, HGLMV3, HGLMV3.HGLMParamete
             "random_family", // distribution of random component, array
             "method",
             "standardize",
-            "missing_values_handling",
-            "plug_values",
             "remove_collinear_columns",
             "max_iterations",
             "objective_epsilon",
@@ -74,16 +71,6 @@ public class HGLMV3 extends ModelBuilderSchema<HGLM, HGLMV3, HGLMV3.HGLMParamete
     @API(help = "Standardize numeric columns to have zero mean and unit variance.", level = Level.critical,
             gridable = true)
     public boolean standardize;
-
-    @API(help = "Handling of missing values. Either MeanImputation, Skip or PlugValues.", 
-            values = { "MeanImputation", "Skip", "PlugValues" }, level = API.Level.expert, 
-            direction=API.Direction.INOUT, gridable = true)
-    public GLMParameters.MissingValuesHandling missing_values_handling;
-
-    @API(help = "Plug Values (a single row frame containing values that will be used to impute missing values of the" +
-            " training/validation frame, use with conjunction missing_values_handling = PlugValues).", 
-            direction = API.Direction.INPUT)
-    public FrameKeyV3 plug_values;
 
     @API(help = "Maximum number of iterations.  Value should >=1.  A value of 0 is only set when only the model " +
             "coefficient names and model coefficient dimensions are needed.", level = Level.secondary)
