@@ -2974,6 +2974,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
       _state.setLambdaSimple(0.0);  // reset to 0 before new lambda is assigned
       _state._currGram = null;
       _state.setBetaDiff(_betaDiffStart);
+      _state.setGradientErr(0.0);
       _state.setGinfo(_ginfoStart);
       _state.setLikelihood(_ginfoStart._likelihood);
       _state.setAllIn(false);

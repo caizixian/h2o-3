@@ -4,9 +4,12 @@ import hex.ModelBuilder;
 import hex.ModelCategory;
 import water.H2O;
 import water.Key;
+import water.Scope;
 import water.exceptions.H2OModelBuilderIllegalArgumentException;
 import water.fvec.Frame;
-import water.fvec.Vec;
+import water.rapids.Rapids;
+import water.rapids.Session;
+import water.rapids.Val;
 
 import java.util.Arrays;
 import java.util.List;
@@ -106,14 +109,15 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
     // NA's in the training frame will be imputed with the mode.
     Frame adaptTrain() {
       Frame trainingFrame = train();
-      Vec groupVec = trainingFrame.vec(_parms._group_column).makeCopy();
-      if (groupVec.naCnt() > 0)
-        replaceNAwithMode(groupVec);
+      // replace NAs in enum and numerical columns with mode/mean
+      Session sess = new Session();
+      Val val = Rapids.exec(String.format("(na.replace.mean.mode %s)", trainingFrame._key));
+      Frame trainingFrameNoNA = Scope.track(val.getFrame());
+      // sort the frame with respect to the group_column
+      return trainingFrame;
     }
     
-    public void replaceNAwithMode(Vec groupVec) {
-      
-    }
+ 
 
     @Override
     public void computeImpl() {
@@ -122,7 +126,7 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
         throw H2OModelBuilderIllegalArgumentException.makeFromBuilder(HGLM.this);
       // generate the new training frame which contains the predictors with fixed coefficients, sorted according to
       // the grouping dictated by the group_column
-      Frame newTFrame = new Frame(rebalance(adaptTrain(), false, Key.make()".temprory.train"));
+      Frame newTFrame = new Frame(rebalance(adaptTrain(), false, Key.make()+".temprory.train"));
     }
   }
   

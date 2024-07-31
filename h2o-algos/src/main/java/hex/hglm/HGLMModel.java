@@ -36,6 +36,7 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
 
   public static class HGLMParameters extends Model.Parameters {
     public GLMModel.GLMParameters.Family _family = gaussian;
+    public GLMModel.GLMParameters.Family _random_family = gaussian;
     public Method _method = EM;
     public double[] _startval;
     public Serializable _missing_values_handling = GLMModel.GLMParameters.MissingValuesHandling.MeanImputation;

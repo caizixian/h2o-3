@@ -1,13 +1,13 @@
 package water.rapids.ast.prims.mungers;
 
 import hex.CreateFrame;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import water.Scope;
 import water.TestUtil;
 import water.fvec.Frame;
 import water.rapids.Rapids;
-import water.rapids.Session;
 import water.rapids.Val;
 import water.runner.CloudSize;
 import water.runner.H2ORunner;
@@ -17,7 +17,7 @@ import water.runner.H2ORunner;
 public class AstNaReplaceMeanModeTest extends TestUtil {
   
   @Test
-  public void TestNaReplaceModeMean() {
+  public void testNaReplaceModeMean() {
     Scope.enter();
     try {
       CreateFrame cf = new CreateFrame();
@@ -33,12 +33,37 @@ public class AstNaReplaceMeanModeTest extends TestUtil {
       Frame testFrame = cf.execImpl().get();
       Scope.track(testFrame);
       
-      Session sess = new Session();
-      Val val = Rapids.exec("(na.replace.mean.mode testFrame)");
+      String x = String.format("(na.replace.mean.mode %s)", testFrame._key);
+      Val val = Rapids.exec(x);
       Frame naReplaced = Scope.track(val.getFrame());
       
       // check when there is na is the original test frame, the new frame should contain the mean for numerical, mode
       // for categorical and no change for all other column types.
+      for (int colIndex=0; colIndex < cf.cols; colIndex++) {
+        if (testFrame.vec(colIndex).isCategorical() || testFrame.vec(colIndex).isNumeric()) {
+          for (int rowIndex=0; rowIndex < cf.rows; rowIndex++) {
+            if (Double.isNaN(testFrame.vec(colIndex).at(rowIndex))) {
+              if (testFrame.vec(colIndex).isCategorical()) {
+                Assert.assertTrue("value "+naReplaced.vec(colIndex).at(rowIndex)+" at row "+rowIndex+
+                                " and column "+colIndex+" should be "+testFrame.vec(colIndex).mode()+ " but is not.",
+                        testFrame.vec(colIndex).mode() == naReplaced.vec(colIndex).at(rowIndex));
+              } else {  // numerical column
+                Assert.assertTrue("value "+naReplaced.vec(colIndex).at(rowIndex)+" at row "+rowIndex+
+                                " and column "+colIndex+" should be "+testFrame.vec(colIndex).mean()+ " but is not.",
+                        Math.abs(testFrame.vec(colIndex).mode() - naReplaced.vec(colIndex).at(rowIndex)) < 1e-6);
+              }
+            } else {
+              Assert.assertTrue("values "+testFrame.vec(colIndex).at(rowIndex)+" and " + 
+                      naReplaced.vec(colIndex).at(rowIndex)+ " at row "+rowIndex+" and column "+colIndex+" should be" +
+                      " equal but is not", 
+                      Math.abs(testFrame.vec(colIndex).at(rowIndex) - naReplaced.vec(colIndex).at(rowIndex)) < 1e-6);
+            }
+          }
+    
+        } else {
+          TestUtil.assertBitIdentical(new Frame(testFrame.vec(colIndex)), new Frame(naReplaced.vec(colIndex)));
+        }
+      }
       
     } finally {
       Scope.exit();

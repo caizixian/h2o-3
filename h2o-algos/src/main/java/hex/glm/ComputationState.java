@@ -39,6 +39,7 @@ public final class ComputationState {
   private static final int MIN_PAR = 1000;
   final boolean _intercept;
   final int _nbetas;
+  private double _gradientErr;
   public final GLMParameters _parms;
   private BetaConstraint _bc;
   double _alpha;
@@ -749,6 +750,7 @@ public final class ComputationState {
     for (int c : activeCols) // set the error tolerance to the highest error of included columns
       if (grad[c] > err) err = grad[c];
       else if (grad[c] < -err) err = -grad[c];
+    _gradientErr = err;
     _beta = beta;
     _u = u;
     _activeBC = null;
@@ -967,6 +969,7 @@ public final class ComputationState {
   
   double getBetaDiff() {return _betaDiff;}
   protected void setBetaDiff(double betaDiff) { _betaDiff = betaDiff; }
+  protected void setGradientErr(double gErr) { _gradientErr = gErr; }
   protected void setGinfo(GLMGradientInfo ginfo) {
     _ginfo = copyGInfo(ginfo);
   }
