@@ -22,7 +22,7 @@ public class AstNaReplaceMeanMode extends AstPrimitive {
     public String str() { return "na.replace.mean.mode";}
     
     @Override
-    public int nargs() { return 1;}
+    public int nargs() { return 1+1;}
     
     @Override
     public ValFrame apply(Env env, Env.StackHelp stk, AstRoot asts[]) {

@@ -142,27 +142,10 @@ public class PojoUtilsTest extends TestUtil {
     params2._alpha = new double[] {1.2, 1.5, 1.4};
     assert PojoUtils.equals(params1,  field1, params2,  field2) == false;
 
-    //  check Family[] _rand_family;
+    //  check Family[];
     field1 = params1.getClass().getFields()[3];
     field2 = params2.getClass().getFields()[3];
 
     assert PojoUtils.equals(params1,  field1, params2,  field2);
-
-    params1._rand_family = new GLMModel.GLMParameters.Family[]  {GLMModel.GLMParameters.Family.binomial};
-    params2._rand_family = new GLMModel.GLMParameters.Family[]  {GLMModel.GLMParameters.Family.multinomial};
-    assert PojoUtils.equals(params1,  field1, params2,  field2) == false;
-
-    //check Link[] _rand_link;
-    field1 = params1.getClass().getFields()[5];
-    field2 = params2.getClass().getFields()[5];
-
-    params1._rand_link = new GLMModel.GLMParameters.Link[] {GLMModel.GLMParameters.Link.identity, GLMModel.GLMParameters.Link.inverse};
-    params2._rand_link = new GLMModel.GLMParameters.Link[] {GLMModel.GLMParameters.Link.identity, GLMModel.GLMParameters.Link.inverse};
-    assert PojoUtils.equals(params1,  field1, params2,  field2);
-
-    params1._rand_link = new GLMModel.GLMParameters.Link[] {GLMModel.GLMParameters.Link.identity, GLMModel.GLMParameters.Link.inverse};
-    params2._rand_link = new GLMModel.GLMParameters.Link[] {GLMModel.GLMParameters.Link.identity};
-    assert PojoUtils.equals(params1,  field1, params2,  field2) == false;
   }
-
 }
