@@ -32,7 +32,8 @@ public class AstNaReplaceMeanModeTest extends TestUtil {
       Frame testFrame = cf.execImpl().get();
       Scope.track(testFrame);
       
-      String x = String.format("(na.replace.mean.mode %s)", testFrame._key);
+      //String x = String.format("(na.replace.mean.mode %s)", testFrame._key);
+      String x = String.format("(na.replace.mean.mode %s)", "abc");
       Val val = Rapids.exec(x);
       Frame naReplaced = Scope.track(val.getFrame());
       
@@ -49,7 +50,7 @@ public class AstNaReplaceMeanModeTest extends TestUtil {
               } else {  // numerical column
                 Assert.assertTrue("value "+naReplaced.vec(colIndex).at(rowIndex)+" at row "+rowIndex+
                                 " and column "+colIndex+" should be "+testFrame.vec(colIndex).mean()+ " but is not.",
-                        Math.abs(testFrame.vec(colIndex).mode() - naReplaced.vec(colIndex).at(rowIndex)) < 1e-6);
+                        Math.abs(testFrame.vec(colIndex).mean() - naReplaced.vec(colIndex).at(rowIndex)) < 1e-6);
               }
             } else {
               Assert.assertTrue("values "+testFrame.vec(colIndex).at(rowIndex)+" and " + 

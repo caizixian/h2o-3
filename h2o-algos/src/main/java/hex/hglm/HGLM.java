@@ -1,14 +1,15 @@
 package hex.hglm;
 
+import hex.DataInfo;
 import hex.ModelBuilder;
 import hex.ModelCategory;
+import hex.glm.GLMModel;
+import water.DKV;
 import water.H2O;
 import water.Key;
-import water.Scope;
 import water.exceptions.H2OModelBuilderIllegalArgumentException;
 import water.fvec.Frame;
 import water.rapids.Rapids;
-import water.rapids.Session;
 import water.rapids.Val;
 
 import java.util.Arrays;
@@ -100,24 +101,28 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
         if (!goodRandomColumns)
           error("random_columns", " can only contain columns in the training frame.");
       }
+      
+      if (valid() != null)
+        error("validatiion_frame", " is not supported at this point.");
     }
   }
 
   private class HGLMDriver extends Driver {
+    DataInfo _dinfo = null;
     
     // this method will first sort the training frame according to the group_column.  Before sorting happens, any
     // NA's in the training frame will be imputed with the mode.
     Frame adaptTrain() {
       Frame trainingFrame = train();
       // replace NAs in enum and numerical columns with mode/mean
-      Session sess = new Session();
       Val val = Rapids.exec(String.format("(na.replace.mean.mode %s)", trainingFrame._key));
-      Frame trainingFrameNoNA = Scope.track(val.getFrame());
+      Frame trainingFrameNoNA = val.getFrame();
       // sort the frame with respect to the group_column
-      return trainingFrame;
+      int groupColumnIndex = (Arrays.stream(trainingFrame.names()).collect(Collectors.toList())).indexOf(_parms._group_column);
+      Frame sortedTrainingFrame = trainingFrameNoNA.sort(new int[]{groupColumnIndex});
+      trainingFrameNoNA.remove();
+      return sortedTrainingFrame;
     }
-    
- 
 
     @Override
     public void computeImpl() {
@@ -127,7 +132,31 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
       // generate the new training frame which contains the predictors with fixed coefficients, sorted according to
       // the grouping dictated by the group_column
       Frame newTFrame = new Frame(rebalance(adaptTrain(), false, Key.make()+".temprory.train"));
+      DKV.put(newTFrame);
+      _job.update(0, "Initializing HGLM model training");
+      
+      HGLMModel model = null;
+      
+      try {
+        _dinfo = new DataInfo(newTFrame, null, 1, _parms._use_all_factor_levels,  _parms._standardize ?
+                DataInfo.TransformType.STANDARDIZE : DataInfo.TransformType.NONE, DataInfo.TransformType.NONE,
+                _parms.missingValuesHandling() == GLMModel.GLMParameters.MissingValuesHandling.Skip,
+                _parms.missingValuesHandling() == GLMModel.GLMParameters.MissingValuesHandling.MeanImputation
+                        || _parms.missingValuesHandling() == GLMModel.GLMParameters.MissingValuesHandling.PlugValues,
+                _parms.makeImputer(), false, hasWeightCol(), hasOffsetCol(), hasFoldCol(), null);
+        DKV.put(_dinfo._key, _dinfo);
+        model = new HGLMModel(dest(), _parms, new HGLMModel.HGLMModelOutput(HGLM.this, _dinfo));
+        model.write_lock(_job);
+        _job.update(1, "Starting to build HGLM model...");
+                
+        
+      } finally {
+        if (model != null) {
+          DKV.remove(newTFrame._key);
+        }
+        model.update(_job);
+        model.unlock(_job);
+      }
     }
   }
-  
 }

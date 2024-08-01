@@ -1,7 +1,10 @@
 package hex.hglm;
 
+import hex.DataInfo;
 import hex.Model;
 import hex.ModelMetrics;
+import hex.deeplearning.DeepLearningModel;
+import hex.glm.GLM;
 import hex.glm.GLMModel;
 import water.Key;
 import water.fvec.Frame;
@@ -47,6 +50,9 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     public boolean _remove_collinear_columns = false;
     public String[] _random_columns;  // store predictors that have random components in the coefficients
     public String _group_column;
+    public boolean _use_all_factor_levels = false;
+    public boolean _standardize = true;
+    
 
 
     @Override
@@ -70,9 +76,44 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     }
 
     public static enum Method {EM}; // EM: expectation maximization
+
+    public GLMModel.GLMParameters.MissingValuesHandling missingValuesHandling() {
+      if (_missing_values_handling instanceof GLMModel.GLMParameters.MissingValuesHandling)
+        return (GLMModel.GLMParameters.MissingValuesHandling) _missing_values_handling;
+      assert _missing_values_handling instanceof DeepLearningModel.DeepLearningParameters.MissingValuesHandling;
+      switch ((DeepLearningModel.DeepLearningParameters.MissingValuesHandling) _missing_values_handling) {
+        case MeanImputation:
+          return GLMModel.GLMParameters.MissingValuesHandling.MeanImputation;
+        case Skip:
+          return GLMModel.GLMParameters.MissingValuesHandling.Skip;
+        default:
+          throw new IllegalStateException("Unsupported missing values handling value: " + _missing_values_handling);
+      }
+    }
+
+    public DataInfo.Imputer makeImputer() {
+      if (missingValuesHandling() == GLMModel.GLMParameters.MissingValuesHandling.PlugValues) {
+        if (_plug_values == null || _plug_values.get() == null) {
+          throw new IllegalStateException("Plug values frame needs to be specified when Missing Value Handling = PlugValues.");
+        }
+        return new GLM.PlugValuesImputer(_plug_values.get());
+      } else { // mean/mode imputation and skip (even skip needs an imputer right now! PUBDEV-6809)
+        return new DataInfo.MeanImputer();
+      }
+    }
   }
   
   public static class HGLMModelOutput extends Model.Output {
+    public DataInfo _dinfo;
+    final GLMModel.GLMParameters.Family _family;
+    final GLMModel.GLMParameters.Family _random_family;
     
+    public HGLMModelOutput(HGLM b, DataInfo dinfo) {
+       super(b, dinfo._adaptedFrame);
+       _dinfo = dinfo;
+       _domains = dinfo._adaptedFrame.domains();
+       _family = b._parms._family;
+       _random_family = b._parms._random_family;
+    }
   }
 }
