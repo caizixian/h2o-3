@@ -1,9 +1,34 @@
 package hex.hglm;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import water.Scope;
 import water.TestUtil;
+import water.fvec.Frame;
+import water.runner.CloudSize;
+import water.runner.H2ORunner;
 
-public class GLMBasicTestHGLM extends TestUtil {
+@RunWith(H2ORunner.class)
+@CloudSize(1)
+public class HGLMBasicTestHGLM extends TestUtil {
+  
+  @Test
+  public void testHGLMModelIris() {
+    Scope.enter();
+    try {
+      Frame iris = parseAndTrackTestFile("smalldata/iris/iris_train.csv");
+      HGLMModel.HGLMParameters params = new HGLMModel.HGLMParameters();
+      params._train = iris._key;
+      params._response_column = "petal_len";
+      params._group_column = "species";
+      params._random_columns = new String[]{"sepal_len", "sepal_wid"};
+      HGLMModel model = new HGLM(params).trainModel().get();
+      Scope.track_generic(model);
+      
+    } finally {
+      Scope.exit();
+    }
+  }
 
   @Test
   public void testSemiconductor() {
@@ -15,7 +40,7 @@ public class GLMBasicTestHGLM extends TestUtil {
       Scope.track(fr);
       GLMParameters parms = new GLMParameters();
       parms._train = fr._key;
-      parms._response_column = "y";
+      parms._response_column = "y";)
       parms._ignored_columns = new String[]{"x2", "x4", "Device"};
       parms._ignore_const_cols = true;
       parms._family = Family.gaussian;

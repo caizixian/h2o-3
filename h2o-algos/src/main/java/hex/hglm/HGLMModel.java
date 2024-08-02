@@ -52,8 +52,6 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     public String _group_column;
     public boolean _use_all_factor_levels = false;
     public boolean _standardize = true;
-    
-
 
     @Override
     public String algoName() {
@@ -75,7 +73,7 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
       return 1;
     }
 
-    public static enum Method {EM}; // EM: expectation maximization
+    public enum Method {EM}; // EM: expectation maximization
 
     public GLMModel.GLMParameters.MissingValuesHandling missingValuesHandling() {
       if (_missing_values_handling instanceof GLMModel.GLMParameters.MissingValuesHandling)
@@ -107,6 +105,12 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     public DataInfo _dinfo;
     final GLMModel.GLMParameters.Family _family;
     final GLMModel.GLMParameters.Family _random_family;
+    public String[] _coefficient_names;
+    public String[] _random_coefficient_names;
+    public long _training_time_ms;
+    double[] _beta;   // fixed coefficients
+    double[] _ubeta;  // random coefficients
+    
     
     public HGLMModelOutput(HGLM b, DataInfo dinfo) {
        super(b, dinfo._adaptedFrame);
