@@ -105,11 +105,13 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     public DataInfo _dinfo;
     final GLMModel.GLMParameters.Family _family;
     final GLMModel.GLMParameters.Family _random_family;
-    public String[] _coefficient_names;
+    public String[] _fixed_coefficient_names;
     public String[] _random_coefficient_names;
     public long _training_time_ms;
     double[] _beta;   // fixed coefficients
-    double[] _ubeta;  // random coefficients
+    double[][] _ubeta;  // random coefficients
+    double[] _beta_normalized;
+    double[][] _ubeta_normalized;
     
     
     public HGLMModelOutput(HGLM b, DataInfo dinfo) {
