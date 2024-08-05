@@ -41,7 +41,7 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     public GLMModel.GLMParameters.Family _family = gaussian;
     public GLMModel.GLMParameters.Family _random_family = gaussian;
     public Method _method = EM;
-    public double[] _startval;
+    public double[] _initial_fixed_effects; // initial values of fixed coefficients
     public Serializable _missing_values_handling = GLMModel.GLMParameters.MissingValuesHandling.MeanImputation;
     public int _max_iterations = -1;
     public boolean _random_intercept = true;
@@ -52,7 +52,10 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     public String _group_column;
     public boolean _use_all_factor_levels = false;
     public boolean _standardize = true;
-
+    public double _tau_u_var_init = 0;  // initial random coefficient effects variance estimate, set by user
+    public double _tau_e_var_init = 0;   // initial random noise variance estimate, set by user
+    public Key _initial_random_effects; // frame key that contains the initial starting values of random coefficient effects
+    
     @Override
     public String algoName() {
       return "HGLM";

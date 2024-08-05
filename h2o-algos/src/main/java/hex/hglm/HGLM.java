@@ -12,6 +12,7 @@ import water.fvec.Frame;
 import water.rapids.Rapids;
 import water.rapids.Val;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -84,6 +85,12 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
                     Skip != _parms._missing_values_handling))
       error("mising_values_handling", " only MeanImputation and Skip are supported at this point.");
     
+    if (_parms._tau_u_var_init < 0)
+      error("tau_u_var_init", "if set, must > 0.0.");
+
+    if (_parms._tau_e_var_init < 0)
+      error("tau_e_var_init", "if set, must > 0.0.");
+    
     super.init(expensive);
     if (error_count() > 0)
       throw H2OModelBuilderIllegalArgumentException.makeFromBuilder(HGLM.this);
@@ -117,6 +124,8 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
       
       if (valid() != null)
         error("validatiion_frame", " is not supported at this point.");
+      if (!_parms._use_all_factor_levels)
+        _parms._random_intercept = true;
     }
   }
 
@@ -154,16 +163,12 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
       init(true);
       if (error_count()>0)
         throw H2OModelBuilderIllegalArgumentException.makeFromBuilder(HGLM.this);
-      // generate the new training frame which contains the predictors with fixed coefficients, sorted according to
-      // the grouping dictated by the group_column
-      Frame newTFrame = new Frame(rebalance(adaptTrain(), false, Key.make()+".temprory.train"));
-      DKV.put(newTFrame);
+
       _job.update(0, "Initializing HGLM model training");
-      
       HGLMModel model = null;
       
       try {
-        initDataInfoComputationState(newTFrame);
+        initModelInfo();
         model = new HGLMModel(dest(), _parms, new HGLMModel.HGLMModelOutput(HGLM.this, _dinfo));
         model.write_lock(_job);
         _job.update(1, "Starting to build HGLM model...");
@@ -172,22 +177,33 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
         model._output._start_time = _startTime;
         model._output._training_time_ms = System.currentTimeMillis()-_startTime;
       } finally {
-        if (model != null) {
-          DKV.remove(newTFrame._key);
-        }
         model.update(_job);
         model.unlock(_job);
       }
     }
     
-    void initDataInfoComputationState(Frame newTFrame) {
-      _dinfo = new DataInfo(newTFrame, null, 1, _parms._use_all_factor_levels,  _parms._standardize ?
+    void initModelInfo() {
+      // _dinfo._adaptedFrame will contain group_column.  Check and make sure clients will pass that along as well.
+      _dinfo = new DataInfo(_train.clone(), null, 1, _parms._use_all_factor_levels,  _parms._standardize ?
               DataInfo.TransformType.STANDARDIZE : DataInfo.TransformType.NONE, DataInfo.TransformType.NONE,
               _parms.missingValuesHandling() == Skip,
               _parms.missingValuesHandling() == MeanImputation
                       || _parms.missingValuesHandling() == GLMModel.GLMParameters.MissingValuesHandling.PlugValues,
               _parms.makeImputer(), false, hasWeightCol(), hasOffsetCol(), hasFoldCol(), null);
       DKV.put(_dinfo._key, _dinfo);
+      // assign coefficient names for fixed, random and group column
+      List<String> allCoeffNames = Arrays.stream(_dinfo.coefNames()).collect(Collectors.toList());
+      String groupCoeffStarts = _parms._group_column+".";
+      List<String> groupCoeffNames =allCoeffNames.stream().filter(x -> x.startsWith(groupCoeffStarts)).collect(Collectors.toList());
+      // fixed Coefficients are all coefficient names excluding group_column
+      List<String> fixedCoeffNames = allCoeffNames.stream().filter(x -> !groupCoeffNames.contains(x)).collect(Collectors.toList());
+      List<String> randomPredictorNames = new ArrayList<>();
+      // random coefficients names
+      for (String coefName : allCoeffNames) {
+        String startCoef = coefName + ".";
+        randomPredictorNames.addAll(allCoeffNames.stream().filter(x -> x.startsWith(startCoef) || x.equals(coefName)).collect(Collectors.toList()));
+      }
+      // initial random and fixed coefficients
     }
     
     

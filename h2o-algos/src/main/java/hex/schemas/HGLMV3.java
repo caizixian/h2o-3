@@ -7,6 +7,7 @@ import hex.hglm.HGLMModel;
 import water.api.API;
 import water.api.API.Direction;
 import water.api.API.Level;
+import water.api.schemas3.KeyV3;
 import water.api.schemas3.ModelParametersSchemaV3;
 
 public class HGLMV3 extends ModelBuilderSchema<HGLM, HGLMV3, HGLMV3.HGLMParametersV3> {
@@ -42,8 +43,28 @@ public class HGLMV3 extends ModelBuilderSchema<HGLM, HGLMV3, HGLMV3.HGLMParamete
             "custom_metric_func",
             "generate_scoring_history",
             "random_intercept", 
-            "group_column"
+            "group_column",
+            "tau_u_var_init",
+            "tau_e_var_init",
+            "initial_random_effects",
+            "initial_fixed_effects"
     };
+
+    @API(level = API.Level.expert, direction = API.Direction.INOUT, gridable=true,
+            help = "An array that contains initial values of the fixed effects coefficient.")
+    public KeyV3.FrameKeyV3 initial_fixed_effects;
+
+    @API(level = API.Level.expert, direction = API.Direction.INOUT, gridable=true,
+            help = "A H2OFrame id that contains initial values of the random effects coefficient.")
+    public KeyV3.FrameKeyV3 initial_random_effects;
+
+    @API(help = "Initial variance of random coefficient effects."
+            , level = Level.expert, gridable = true)
+    public double tau_u_var_init;
+
+    @API(help = "Initial variance of random noise."
+            , level = Level.expert, gridable = true)
+    public double tau_e_var_init;
 
     @API(help = "Seed for pseudo random number generator (if applicable).", gridable = true)
     public long seed;

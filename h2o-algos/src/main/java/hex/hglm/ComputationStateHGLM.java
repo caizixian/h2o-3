@@ -13,6 +13,11 @@ public class ComputationStateHGLM {
   private double[][] _ubeta; // random coefficients;
   final DataInfo _dinfo;
   private final Job _job;
+  double _tauUSq; // variance of random coefficients effects;
+  double _tauESq; // variance of random noise
+  String[] _fixed_cofficient_names;
+  String[] _random_coefficient_names;
+  String[] _group_column_names;
   
   public ComputationStateHGLM(Job job, HGLMModel.HGLMParameters parms, DataInfo dinfo, double[] beta, double[][] ubeta) {
     _job = job;
