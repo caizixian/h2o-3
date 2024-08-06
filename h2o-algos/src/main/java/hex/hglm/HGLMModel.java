@@ -56,6 +56,8 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     public double _tau_e_var_init = 0;   // initial random noise variance estimate, set by user
     public Key _initial_random_effects; // frame key that contains the initial starting values of random coefficient effects
     public long _seed = -1;
+    public double _objective_epsilon = 1e-6;
+    public double _beta_epsilon = 1e-6;
     
     @Override
     public String algoName() {

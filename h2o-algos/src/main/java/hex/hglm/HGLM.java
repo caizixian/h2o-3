@@ -94,6 +94,12 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
     if (_parms._seed == 0)
       error("seed", "cannot be set to any number except zero.");
     
+    if (_parms._beta_epsilon < 0)
+      error("beta_epsilon", "if specified, must >= 0.0.");
+
+    if (_parms._objective_epsilon < 0)
+      error("objective_epsilon", "if specified, must >= 0.0.");
+    
     super.init(expensive);
     if (error_count() > 0)
       throw H2OModelBuilderIllegalArgumentException.makeFromBuilder(HGLM.this);
@@ -104,6 +110,9 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
                 " model.");
         warn("_max_iterations", H2O.technote(2 , "for HGLM, if specified, must be >= 1 or == -1."));
       }
+      
+      if (_parms._max_iterations == -1)
+        _parms._max_iterations = 500;
 
       Frame trainFrame = train();
       List<String> columnNames = Arrays.stream(trainFrame.names()).collect(Collectors.toList());
@@ -242,27 +251,32 @@ public class HGLM extends ModelBuilder<HGLMModel, HGLMModel.HGLMParameters, HGLM
       if (_parms._tau_e_var_init != 0.0)
         tauEVar = _parms._tau_e_var_init;
       else
-        tauEVar = random.nextGaussian();
+        tauEVar = Math.abs(random.nextGaussian());
       
       if (_parms._tau_u_var_init != 0.0)
         tauUVar = _parms._tau_u_var_init;
       else
-        tauUVar = random.nextGaussian();
+        tauUVar = Math.abs(random.nextGaussian());
         
       _state = new ComputationStateHGLM(_job, _parms, _dinfo, beta, ubeta, tauUVar, tauEVar, _fixedCoeffNames, 
               _randomCoefNames, _level2UnitNames, 0);
     }
-    
-    void initModelInfo() {
-      
-    }
-    
 
     /**
      * Build HGLM model using EM (Expectation Maximization).
      */
     void fitEM(HGLMModel model) {
+      int iteration = 0;
       
+      try {
+        // grab current value of fixed beta, tauEVar, tauUVar
+        // estimate CDSS and get the estimate the random beta
+        // substitue estimated CDSS and estimate new fixed beta, tauEVar, tauUVar
+        // save newly estimated fixed beta, tauEVar, tauUVar into _state
+        // check if stopping conditions are satisfied
+      } catch (Exception e) {
+        
+      }
     }
   }
 }

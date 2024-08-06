@@ -17,8 +17,6 @@ public class HGLMV3 extends ModelBuilderSchema<HGLM, HGLMV3, HGLMV3.HGLMParamete
             "model_id",
             "training_frame",
             "validation_frame",
-            "checkpoint",
-            "export_checkpoints_dir",
             "seed",
             "response_column",
             "ignored_columns",
