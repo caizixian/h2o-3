@@ -17,7 +17,7 @@ def setScanningStages(assemblyType, stageIndex) {
     stage ("${stageIndex}.B. Scan ${assemblyType} jar using Trivy") {
         script {
             sh "./trivy image ${assemblyImage} --output ${assemblyImage}-trivy.out"
-            sh "sed -i "'s/-/=/g'" ${assemblyImage}-trivy.out"
+            sh 'sed -i "s/-/=/g" ${assemblyImage}-trivy.out'
         }
         archiveArtifacts artifacts: "${assemblyImage}-trivy.out"
     }
