@@ -1153,6 +1153,22 @@ public class ArrayUtils {
     return vseed;
   }
 
+  /** Remove the array allocation in this one */
+  public static double[][] gaussianVector(Random random, double[][] vseed, int firstInd, int secondInd) {
+    if (vseed == null) {
+      vseed = new double[firstInd][secondInd];
+    } else {
+      firstInd = vseed.length;
+      secondInd = vseed[0].length;
+    }
+    
+    for (int rowInd = 0; rowInd < firstInd; rowInd++)
+      for (int colInd=0; colInd < secondInd; colInd++) {
+        vseed[rowInd][colInd] = random.nextGaussian();
+    }
+    return vseed;
+  }
+
   /** Returns number of strings which represents a number. */
   public static int numInts(String... a) {
     int cnt = 0;

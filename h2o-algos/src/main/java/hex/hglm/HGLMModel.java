@@ -55,6 +55,7 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     public double _tau_u_var_init = 0;  // initial random coefficient effects variance estimate, set by user
     public double _tau_e_var_init = 0;   // initial random noise variance estimate, set by user
     public Key _initial_random_effects; // frame key that contains the initial starting values of random coefficient effects
+    public long _seed = -1;
     
     @Override
     public String algoName() {
@@ -108,13 +109,16 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
     public DataInfo _dinfo;
     final GLMModel.GLMParameters.Family _family;
     final GLMModel.GLMParameters.Family _random_family;
-    public String[] _fixed_coefficient_names;
-    public String[] _random_coefficient_names;
+    public String[] _fixed_coefficient_names; // include intercept as a coeff name
+    public String[] _random_coefficient_names;  // include intercept only if _parms._random_intercept = true
+    public String[] _group_column_names;
     public long _training_time_ms;
     double[] _beta;   // fixed coefficients
     double[][] _ubeta;  // random coefficients
     double[] _beta_normalized;
     double[][] _ubeta_normalized;
+    double _tauUVar;
+    double _tauEVar;
     
     
     public HGLMModelOutput(HGLM b, DataInfo dinfo) {
@@ -123,6 +127,16 @@ public class HGLMModel extends Model<HGLMModel, HGLMModel.HGLMParameters, HGLMMo
        _domains = dinfo._adaptedFrame.domains();
        _family = b._parms._family;
        _random_family = b._parms._random_family;
+    }
+    
+    public void setModelOutputFields(ComputationStateHGLM state) {
+      _beta = state.get_beta();
+      _ubeta = state.get_ubeta();
+      _fixed_coefficient_names = state.get_fixedCofficientNames();
+      _random_coefficient_names = state.get_randomCoefficientNames();
+      _group_column_names = state.get_groupColumnNames();
+      _tauUVar = state.get_tauUVar();
+      _tauEVar = state.get_tauEVar();
     }
   }
 }

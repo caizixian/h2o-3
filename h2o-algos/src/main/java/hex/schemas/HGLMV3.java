@@ -52,17 +52,25 @@ public class HGLMV3 extends ModelBuilderSchema<HGLM, HGLMV3, HGLMV3.HGLMParamete
 
     @API(level = API.Level.expert, direction = API.Direction.INOUT, gridable=true,
             help = "An array that contains initial values of the fixed effects coefficient.")
-    public KeyV3.FrameKeyV3 initial_fixed_effects;
+    public double[] initial_fixed_effects;
 
     @API(level = API.Level.expert, direction = API.Direction.INOUT, gridable=true,
-            help = "A H2OFrame id that contains initial values of the random effects coefficient.")
+            help = "A H2OFrame id that contains initial values of the random effects coefficient.  The row names should" +
+                    "be the random coefficient names.  If you are not sure what the random coefficient names are," +
+                    " build HGLM model with max_iterations = 0 and checkout the model output field " +
+                    "random_coefficient_names.  The number of rows of this frame should be the number of level 2" +
+                    " units.  Again, to figure this out, build HGLM model with max_iterations=0 and check out " +
+                    "the model output field group_column_names.  The number of rows should equal the length of the" +
+                    "group_column_names.")
     public KeyV3.FrameKeyV3 initial_random_effects;
 
-    @API(help = "Initial variance of random coefficient effects."
+    @API(help = "Initial variance of random coefficient effects.  If set, should provide a value > 0.0.  If not set, " +
+            "will be randomly set in the model building process."
             , level = Level.expert, gridable = true)
     public double tau_u_var_init;
 
-    @API(help = "Initial variance of random noise."
+    @API(help = "Initial variance of random noise.  If set, should provide a value > 0.0.  If not set, will be randomly" +
+            " set in the model building process."
             , level = Level.expert, gridable = true)
     public double tau_e_var_init;
 
